@@ -17,7 +17,7 @@ namespace ColorQuantizer.Tests
         private static IEnumerable<string> GetTestImages() => Directory.EnumerateFiles(@"..\..\..\..\sample_data", "*.jpg", SearchOption.AllDirectories);
 
         [Fact]
-        public void Test1()
+        public void Both_impls_same_quantization()
         {
             foreach (var item in GetTestImages())
             {
@@ -28,7 +28,23 @@ namespace ColorQuantizer.Tests
                 var a = initialQuantizer.Quantize(colors, 128);
                 var b = optimizedQuantizer.Quantize(colors, 128);
 
-                Assert.Equal(initialQuantizer.FindAllColorVariations(a, true), initialQuantizer.FindAllColorVariations(b, true));
+                Assert.Equal(a, b);
+            }
+        }
+
+        [Fact]
+        public void Both_impls_same_swatch()
+        {
+            foreach (var item in GetTestImages())
+            {
+                using var stream = File.OpenRead(item);
+                using var bitmap = SKBitmap.Decode(stream);
+                var colors = bitmap.Pixels;
+
+                //quantize with one, check that both find the same final swatch.
+                var quantized = initialQuantizer.Quantize(colors, 128);
+
+                Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true), optimizedQuantizer.FindAllColorVariations(quantized, true));
             }
         }
     }

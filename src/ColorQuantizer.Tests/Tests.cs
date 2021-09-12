@@ -14,23 +14,22 @@ namespace ColorQuantizer.Tests
         private readonly InitialColorQuantizer initialQuantizer = new();
         private readonly OptimizedColorQuantizer optimizedQuantizer = new();
 
-        private readonly SKBitmap _bitmap;
-        private readonly SKColor[] _colors;
-
-        public Tests()
-        {
-            using var stream = File.OpenRead(@"..\..\..\..\sample_data\splash\Aatrox_0.jpg");
-            _bitmap = SKBitmap.Decode(stream);
-            _colors = _bitmap.Pixels;
-        }
+        private static IEnumerable<string> GetTestImages() => Directory.EnumerateFiles(@"..\..\..\..\sample_data", "*.jpg", SearchOption.AllDirectories);
 
         [Fact]
         public void Test1()
         {
-            var a = initialQuantizer.Quantize(_colors, 128);
-            var b = optimizedQuantizer.Quantize(_colors, 128);
+            foreach (var item in GetTestImages())
+            {
+                using var stream = File.OpenRead(item);
+                using var bitmap = SKBitmap.Decode(stream);
+                var colors = bitmap.Pixels;
 
-            Assert.Equal(initialQuantizer.FindAllColorVariations(a, true), initialQuantizer.FindAllColorVariations(b, true));
+                var a = initialQuantizer.Quantize(colors, 128);
+                var b = optimizedQuantizer.Quantize(colors, 128);
+
+                Assert.Equal(initialQuantizer.FindAllColorVariations(a, true), initialQuantizer.FindAllColorVariations(b, true));
+            }
         }
     }
 }

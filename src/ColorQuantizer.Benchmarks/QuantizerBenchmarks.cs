@@ -21,7 +21,7 @@ namespace ColorQuantizer.Benchmarks
 
         public QuantizerBenchmarks()
         {
-            using var stream = File.OpenRead(@"..\..\..\..\sample_data\splash\Aatrox_0.jpg");
+            using var stream = File.OpenRead(@"..\..\..\..\..\..\..\..\sample_data\splash\Aatrox_0.jpg");
             _bitmap = SKBitmap.Decode(stream);
             _colors = _bitmap.Pixels;
         }

@@ -1,10 +1,10 @@
 using ColorQuantizer.Initial;
-using ColorQuantizer.Optimized;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ColorQuantizer.Opzimized2;
 using Xunit;
 
 namespace ColorQuantizer.Tests
@@ -12,21 +12,21 @@ namespace ColorQuantizer.Tests
     public class Tests
     {
         private readonly InitialColorQuantizer initialQuantizer = new();
-        private readonly OptimizedColorQuantizer optimizedQuantizer = new();
-
+        private readonly OptimizedColorQuantizer2 optimizedQuantizer = new();
+        
         private static IEnumerable<string> GetTestImages() => Directory.EnumerateFiles(@"..\..\..\..\sample_data", "*.jpg", SearchOption.AllDirectories);
 
         [Fact]
         public void Both_impls_same_quantization()
         {
-            foreach (var item in GetTestImages())
+            foreach (string item in GetTestImages())
             {
-                using var stream = File.OpenRead(item);
-                using var bitmap = SKBitmap.Decode(stream);
-                var colors = bitmap.Pixels;
+                using FileStream stream = File.OpenRead(item);
+                using SKBitmap bitmap = SKBitmap.Decode(stream);
+                SKColor[] colors = bitmap.Pixels;
 
-                var a = initialQuantizer.Quantize(colors, 128);
-                var b = optimizedQuantizer.Quantize(colors, 128);
+                SKColor[] a = initialQuantizer.Quantize(colors, 128);
+                SKColor[] b = optimizedQuantizer.Quantize(colors, 128);
 
                 Assert.Equal(a, b);
             }
@@ -35,14 +35,14 @@ namespace ColorQuantizer.Tests
         [Fact]
         public void Both_impls_same_swatch()
         {
-            foreach (var item in GetTestImages())
+            foreach (string item in GetTestImages())
             {
-                using var stream = File.OpenRead(item);
-                using var bitmap = SKBitmap.Decode(stream);
-                var colors = bitmap.Pixels;
+                using FileStream stream = File.OpenRead(item);
+                using SKBitmap bitmap = SKBitmap.Decode(stream);
+                SKColor[] colors = bitmap.Pixels;
 
                 //quantize with one, check that both find the same final swatch.
-                var quantized = initialQuantizer.Quantize(colors, 128);
+                SKColor[] quantized = initialQuantizer.Quantize(colors, 128);
 
                 Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true), optimizedQuantizer.FindAllColorVariations(quantized, true));
             }

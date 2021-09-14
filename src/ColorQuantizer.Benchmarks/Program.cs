@@ -1,5 +1,8 @@
-﻿using BenchmarkDotNet.Running;
-using System;
+﻿using System;
+using System.IO;
+using BenchmarkDotNet.Running;
+using ColorQuantizer.Opzimized2;
+using SkiaSharp;
 
 namespace ColorQuantizer.Benchmarks
 {
@@ -7,7 +10,40 @@ namespace ColorQuantizer.Benchmarks
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<QuantizerBenchmarks>();
+            //BenchmarkRunner.Run<QuantizerBenchmarks>();
+
+            Profile();
+        }
+
+        private static SKBitmap _bitmap;
+        private static SKColor[] _colors;
+        private static OptimizedColorQuantizer2 _optimizedColorQuantizer2;
+
+        private static void Profile()
+        {
+            InitializeProfile();
+
+            const int RUNS = 50;
+            for (int i = 0; i < RUNS; i++)
+            {
+                Console.WriteLine($"{i + 1}/{RUNS}");
+                ProfileRun();
+            }
+        }
+
+        private static void InitializeProfile()
+        {
+            _optimizedColorQuantizer2 = new OptimizedColorQuantizer2();
+
+            using FileStream stream = File.OpenRead(@"..\..\..\..\sample_data\splash\Aatrox_0.jpg");
+            _bitmap = SKBitmap.Decode(stream);
+            _colors = _bitmap.Pixels;
+        }
+
+        private static ColorSwatch ProfileRun()
+        {
+            SKColor[] skClrs = _optimizedColorQuantizer2.Quantize(_colors, 128);
+            return _optimizedColorQuantizer2.FindAllColorVariations(skClrs, true);
         }
     }
 }

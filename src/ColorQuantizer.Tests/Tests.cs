@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ColorQuantizer.Optimized3;
 using ColorQuantizer.Opzimized2;
 using Xunit;
 
@@ -12,7 +13,7 @@ namespace ColorQuantizer.Tests
     public class Tests
     {
         private readonly InitialColorQuantizer initialQuantizer = new();
-        private readonly OptimizedColorQuantizer2 optimizedQuantizer = new();
+        private readonly OptimizedColorQuantizer3 optimizedQuantizer = new();
         
         private static IEnumerable<string> GetTestImages() => Directory.EnumerateFiles(@"..\..\..\..\sample_data", "*.jpg", SearchOption.AllDirectories);
 

@@ -14,7 +14,8 @@ namespace ColorQuantizer.Optimized3
             for (int i = 0; i < span.Length; i++)
                 counts[span[i].Blue]++;
 
-            Span<SKColor[]> buckets = ArrayPool<SKColor[]>.Shared.Rent(256).AsSpan(0, 256);
+            SKColor[][] bucketsArray = ArrayPool<SKColor[]>.Shared.Rent(256);
+            Span<SKColor[]> buckets = bucketsArray.AsSpan(0, 256);
             for (int i = 0; i < counts.Length; i++)
                 buckets[i] = ArrayPool<SKColor>.Shared.Rent(counts[i]);
 
@@ -38,6 +39,8 @@ namespace ColorQuantizer.Optimized3
 
                 ArrayPool<SKColor>.Shared.Return(buckets[i]);
             }
+
+            ArrayPool<SKColor[]>.Shared.Return(bucketsArray);
         }
 
         #endregion

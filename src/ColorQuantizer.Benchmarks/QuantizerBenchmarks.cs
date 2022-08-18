@@ -157,7 +157,7 @@ namespace ColorQuantizer.Benchmarks
             int i = 0;
             foreach (SKColor[] colors in _colors)
             {
-                SKColor[] skClrs = initialColorQuantizer.Quantize(colors, 128);
+                SKColor[] skClrs = initialColorQuantizer.Quantize(colors, Size);
                 swatches[i++] = initialColorQuantizer.FindAllColorVariations(skClrs, true);
             }
 

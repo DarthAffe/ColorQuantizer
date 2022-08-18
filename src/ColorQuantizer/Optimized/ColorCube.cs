@@ -11,7 +11,7 @@ namespace ColorQuantizer.Optimized
         {
             _colors = colors;
 
-            var span = _colors.Span;
+            Span<SKColor> span = _colors.Span;
 
             byte minRed = byte.MaxValue, minGreen = byte.MaxValue, minBlue = byte.MaxValue;
             byte maxRed = byte.MinValue, maxGreen = byte.MinValue, maxBlue = byte.MinValue;
@@ -67,7 +67,7 @@ namespace ColorQuantizer.Optimized
         internal SKColor GetAverageColor()
         {
             int r = 0, g = 0, b = 0;
-            var span = _colors.Span;
+            Span<SKColor> span = _colors.Span;
 
             for (int i = 0; i < _colors.Length; i++)
             {

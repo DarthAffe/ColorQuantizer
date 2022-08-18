@@ -5,6 +5,7 @@ using ColorQuantizer.Initial;
 using SkiaSharp;
 using System.IO;
 using System.Linq;
+using ColorQuantizer.Optimized3;
 using ColorQuantizer.Opzimized2;
 
 namespace ColorQuantizer.Benchmarks
@@ -15,10 +16,14 @@ namespace ColorQuantizer.Benchmarks
     {
         private readonly InitialColorQuantizer initialColorQuantizer = new();
         private readonly OptimizedColorQuantizer2 optimizedColorQuantizer = new();
+        private readonly OptimizedColorQuantizer3 optimizedColorQuantizer3 = new();
         private readonly List<SKBitmap> _bitmap;
         private readonly List<SKColor[]> _colors;
 
         private readonly SKColor[][] _rangeTestColor;
+        
+        [Params(128)]
+        public int Size { get; set; }
 
         public QuantizerBenchmarks()
         {
@@ -146,21 +151,42 @@ namespace ColorQuantizer.Benchmarks
         //}
 
         //[Benchmark]
-        //public ColorSwatch Old128()
-        //{
-        //    SKColor[] skClrs = initialColorQuantizer.Quantize(_colors, 128);
-        //    return initialColorQuantizer.FindAllColorVariations(skClrs, true);
-        //}
-
-        [Benchmark]
-        public ColorSwatch[] New128()
+        public ColorSwatch[] Old128()
         {
             ColorSwatch[] swatches = new ColorSwatch[_colors.Count];
             int i = 0;
             foreach (SKColor[] colors in _colors)
             {
-                SKColor[] skClrs = optimizedColorQuantizer.Quantize(colors, 128);
+                SKColor[] skClrs = initialColorQuantizer.Quantize(colors, 128);
+                swatches[i++] = initialColorQuantizer.FindAllColorVariations(skClrs, true);
+            }
+
+            return swatches;
+        }
+
+        [Benchmark]
+        public ColorSwatch[] New()
+        {
+            ColorSwatch[] swatches = new ColorSwatch[_colors.Count];
+            int i = 0;
+            foreach (SKColor[] colors in _colors)
+            {
+                SKColor[] skClrs = optimizedColorQuantizer.Quantize(colors, Size);
                 swatches[i++] = optimizedColorQuantizer.FindAllColorVariations(skClrs, true);
+            }
+
+            return swatches;
+        }
+
+        [Benchmark]
+        public ColorSwatch[] LastIteration()
+        {
+            ColorSwatch[] swatches = new ColorSwatch[_colors.Count];
+            int i = 0;
+            foreach (SKColor[] colors in _colors)
+            {
+                SKColor[] skClrs = optimizedColorQuantizer3.Quantize(colors, Size);
+                swatches[i++] = optimizedColorQuantizer3.FindAllColorVariations(skClrs, true);
             }
 
             return swatches;

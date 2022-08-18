@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using BenchmarkDotNet.Running;
+using ColorQuantizer.Optimized3;
 using ColorQuantizer.Opzimized2;
 using SkiaSharp;
 
@@ -10,20 +11,20 @@ namespace ColorQuantizer.Benchmarks
     {
         static void Main(string[] args)
         {
-            //BenchmarkRunner.Run<QuantizerBenchmarks>();
+            BenchmarkRunner.Run<QuantizerBenchmarks>(); 
 
-            Profile();
+            //Profile();
         }
 
         private static SKBitmap _bitmap;
         private static SKColor[] _colors;
-        private static OptimizedColorQuantizer2 _optimizedColorQuantizer2;
+        private static OptimizedColorQuantizer3 _optimizedColorQuantizer2;
 
         private static void Profile()
         {
             InitializeProfile();
 
-            const int RUNS = 50;
+            const int RUNS = 5;
             for (int i = 0; i < RUNS; i++)
             {
                 Console.WriteLine($"{i + 1}/{RUNS}");
@@ -33,7 +34,7 @@ namespace ColorQuantizer.Benchmarks
 
         private static void InitializeProfile()
         {
-            _optimizedColorQuantizer2 = new OptimizedColorQuantizer2();
+            _optimizedColorQuantizer2 = new OptimizedColorQuantizer3();
 
             using FileStream stream = File.OpenRead(@"..\..\..\..\sample_data\splash\Aatrox_0.jpg");
             _bitmap = SKBitmap.Decode(stream);

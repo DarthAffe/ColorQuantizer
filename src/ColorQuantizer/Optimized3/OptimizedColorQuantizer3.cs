@@ -1,37 +1,39 @@
-﻿using SkiaSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using SkiaSharp;
 
-namespace ColorQuantizer.Optimized
+namespace ColorQuantizer.Optimized3
 {
-    public class OptimizedColorQuantizer/* : IColorQuantizer*/
+    public class OptimizedColorQuantizer3
     {
-        /// <inheritdoc />
-        public SKColor[] Quantize(SKColor[] colors, int amount)
+        public SKColor[] Quantize(in Span<SKColor> colors, int amount)
         {
             if ((amount & (amount - 1)) != 0)
                 throw new ArgumentException("Must be power of two", nameof(amount));
-
+            
             Queue<ColorCube> cubes = new(amount);
-            cubes.Enqueue(new ColorCube(colors));
+            cubes.Enqueue(new ColorCube(colors, 0, colors.Length, SortTarget.None));
 
             while (cubes.Count < amount)
             {
                 ColorCube cube = cubes.Dequeue();
 
-                if (cube.TrySplit(out ColorCube a, out ColorCube b))
+                if (cube.TrySplit(colors, out ColorCube? a, out ColorCube? b))
                 {
                     cubes.Enqueue(a);
                     cubes.Enqueue(b);
                 }
             }
 
-            return cubes.Select(c => c.GetAverageColor()).ToArray();
+            SKColor[] result = new SKColor[cubes.Count];
+            int i = 0;
+            foreach (ColorCube colorCube in cubes)
+                result[i++] = colorCube.GetAverageColor(colors);
+
+            return result;
         }
 
-        /// <inheritdoc />
-        public ColorSwatch FindAllColorVariations(SKColor[] colors, bool ignoreLimits = false)
+        public ColorSwatch FindAllColorVariations(IEnumerable<SKColor> colors, bool ignoreLimits = false)
         {
             SKColor bestVibrantColor = SKColor.Empty;
             SKColor bestLightVibrantColor = SKColor.Empty;
@@ -39,12 +41,12 @@ namespace ColorQuantizer.Optimized
             SKColor bestMutedColor = SKColor.Empty;
             SKColor bestLightMutedColor = SKColor.Empty;
             SKColor bestDarkMutedColor = SKColor.Empty;
-            float bestVibrantScore = 0;
-            float bestLightVibrantScore = 0;
-            float bestDarkVibrantScore = 0;
-            float bestMutedScore = 0;
-            float bestLightMutedScore = 0;
-            float bestDarkMutedScore = 0;
+            float bestVibrantScore = float.MinValue;
+            float bestLightVibrantScore = float.MinValue;
+            float bestDarkVibrantScore = float.MinValue;
+            float bestMutedScore = float.MinValue;
+            float bestLightMutedScore = float.MinValue;
+            float bestDarkMutedScore = float.MinValue;
 
             //ugly but at least we only loop through the enumerable once ¯\_(ツ)_/¯
             foreach (SKColor color in colors)
@@ -67,7 +69,7 @@ namespace ColorQuantizer.Optimized
                 SetIfBetterScore(ref bestDarkMutedScore, ref bestDarkMutedColor, color, ColorType.DarkMuted, ignoreLimits);
             }
 
-            return new()
+            return new ColorSwatch
             {
                 Vibrant = bestVibrantColor,
                 LightVibrant = bestLightVibrantColor,
@@ -89,88 +91,85 @@ namespace ColorQuantizer.Optimized
             saturation /= 100f;
             luma /= 100f;
 
-            if (!ignoreLimits &&
-                (saturation <= GetMinSaturation(type) || saturation >= GetMaxSaturation(type)
-                || luma <= GetMinLuma(type) || luma >= GetMaxLuma(type)))
+            if (!ignoreLimits && ((saturation <= GetMinSaturation(type)) || (saturation >= GetMaxSaturation(type)) || (luma <= GetMinLuma(type)) || (luma >= GetMaxLuma(type))))
             {
                 //if either saturation or luma falls outside the min-max, return the
                 //lowest score possible unless we're ignoring these limits.
                 return float.MinValue;
             }
 
-            float totalValue = (InvertDiff(saturation, GetTargetSaturation(type)) * weightSaturation) +
-                                (InvertDiff(luma, GetTargetLuma(type)) * weightLuma);
+            float totalValue = (InvertDiff(saturation, GetTargetSaturation(type)) * WEIGHT_SATURATION) + (InvertDiff(luma, GetTargetLuma(type)) * WEIGHT_LUMA);
 
-            const float totalWeight = weightSaturation + weightLuma;
+            const float TOTAL_WEIGHT = WEIGHT_SATURATION + WEIGHT_LUMA;
 
-            return totalValue / totalWeight;
+            return totalValue / TOTAL_WEIGHT;
         }
 
         #region Constants
 
-        private const float targetDarkLuma = 0.26f;
-        private const float maxDarkLuma = 0.45f;
-        private const float minLightLuma = 0.55f;
-        private const float targetLightLuma = 0.74f;
-        private const float minNormalLuma = 0.3f;
-        private const float targetNormalLuma = 0.5f;
-        private const float maxNormalLuma = 0.7f;
-        private const float targetMutesSaturation = 0.3f;
-        private const float maxMutesSaturation = 0.3f;
-        private const float targetVibrantSaturation = 1.0f;
-        private const float minVibrantSaturation = 0.35f;
-        private const float weightSaturation = 3f;
-        private const float weightLuma = 5f;
+        private const float TARGET_DARK_LUMA = 0.26f;
+        private const float MAX_DARK_LUMA = 0.45f;
+        private const float MIN_LIGHT_LUMA = 0.55f;
+        private const float TARGET_LIGHT_LUMA = 0.74f;
+        private const float MIN_NORMAL_LUMA = 0.3f;
+        private const float TARGET_NORMAL_LUMA = 0.5f;
+        private const float MAX_NORMAL_LUMA = 0.7f;
+        private const float TARGET_MUTES_SATURATION = 0.3f;
+        private const float MAX_MUTES_SATURATION = 0.3f;
+        private const float TARGET_VIBRANT_SATURATION = 1.0f;
+        private const float MIN_VIBRANT_SATURATION = 0.35f;
+        private const float WEIGHT_SATURATION = 3f;
+        private const float WEIGHT_LUMA = 5f;
 
         private static float GetTargetLuma(ColorType colorType) => colorType switch
         {
-            ColorType.Vibrant => targetNormalLuma,
-            ColorType.LightVibrant => targetLightLuma,
-            ColorType.DarkVibrant => targetDarkLuma,
-            ColorType.Muted => targetNormalLuma,
-            ColorType.LightMuted => targetLightLuma,
-            ColorType.DarkMuted => targetDarkLuma,
+            ColorType.Vibrant => TARGET_NORMAL_LUMA,
+            ColorType.LightVibrant => TARGET_LIGHT_LUMA,
+            ColorType.DarkVibrant => TARGET_DARK_LUMA,
+            ColorType.Muted => TARGET_NORMAL_LUMA,
+            ColorType.LightMuted => TARGET_LIGHT_LUMA,
+            ColorType.DarkMuted => TARGET_DARK_LUMA,
             _ => throw new ArgumentException(nameof(colorType))
         };
 
         private static float GetMinLuma(ColorType colorType) => colorType switch
         {
-            ColorType.Vibrant => minNormalLuma,
-            ColorType.LightVibrant => minLightLuma,
+            ColorType.Vibrant => MIN_NORMAL_LUMA,
+            ColorType.LightVibrant => MIN_LIGHT_LUMA,
             ColorType.DarkVibrant => 0f,
-            ColorType.Muted => minNormalLuma,
-            ColorType.LightMuted => minLightLuma,
+            ColorType.Muted => MIN_NORMAL_LUMA,
+            ColorType.LightMuted => MIN_LIGHT_LUMA,
             ColorType.DarkMuted => 0,
             _ => throw new ArgumentException(nameof(colorType))
         };
 
         private static float GetMaxLuma(ColorType colorType) => colorType switch
         {
-            ColorType.Vibrant => maxNormalLuma,
+            ColorType.Vibrant => MAX_NORMAL_LUMA,
             ColorType.LightVibrant => 1f,
-            ColorType.DarkVibrant => maxDarkLuma,
-            ColorType.Muted => maxNormalLuma,
+            ColorType.DarkVibrant => MAX_DARK_LUMA,
+            ColorType.Muted => MAX_NORMAL_LUMA,
             ColorType.LightMuted => 1f,
-            ColorType.DarkMuted => maxDarkLuma,
+            ColorType.DarkMuted => MAX_DARK_LUMA,
             _ => throw new ArgumentException(nameof(colorType))
         };
 
         private static float GetTargetSaturation(ColorType colorType) => colorType switch
         {
-            ColorType.Vibrant => targetVibrantSaturation,
-            ColorType.LightVibrant => targetVibrantSaturation,
-            ColorType.DarkVibrant => targetVibrantSaturation,
-            ColorType.Muted => targetMutesSaturation,
-            ColorType.LightMuted => targetMutesSaturation,
-            ColorType.DarkMuted => targetMutesSaturation,
+            ColorType.Vibrant => TARGET_VIBRANT_SATURATION,
+            ColorType.LightVibrant => TARGET_VIBRANT_SATURATION,
+            ColorType.DarkVibrant => TARGET_VIBRANT_SATURATION,
+            ColorType.Muted => TARGET_MUTES_SATURATION,
+            ColorType.LightMuted => TARGET_MUTES_SATURATION,
+            ColorType.DarkMuted => TARGET_MUTES_SATURATION,
             _ => throw new ArgumentException(nameof(colorType))
         };
 
         private static float GetMinSaturation(ColorType colorType) => colorType switch
         {
-            ColorType.Vibrant => minVibrantSaturation,
-            ColorType.LightVibrant => minVibrantSaturation,
-            ColorType.DarkVibrant => minVibrantSaturation,
+            ColorType.Vibrant => MIN_VIBRANT_SATURATION,
+            ColorType.LightVibrant => MIN_VIBRANT_SATURATION,
+            ColorType.DarkVibrant => MIN_VIBRANT_SATURATION,
             ColorType.Muted => 0,
             ColorType.LightMuted => 0,
             ColorType.DarkMuted => 0,
@@ -182,9 +181,9 @@ namespace ColorQuantizer.Optimized
             ColorType.Vibrant => 1f,
             ColorType.LightVibrant => 1f,
             ColorType.DarkVibrant => 1f,
-            ColorType.Muted => maxMutesSaturation,
-            ColorType.LightMuted => maxMutesSaturation,
-            ColorType.DarkMuted => maxMutesSaturation,
+            ColorType.Muted => MAX_MUTES_SATURATION,
+            ColorType.LightMuted => MAX_MUTES_SATURATION,
+            ColorType.DarkMuted => MAX_MUTES_SATURATION,
             _ => throw new ArgumentException(nameof(colorType))
         };
 

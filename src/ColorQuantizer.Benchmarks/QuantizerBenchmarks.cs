@@ -150,7 +150,7 @@ namespace ColorQuantizer.Benchmarks
         //    return new ColorRanges((byte)(redMax - redMin), (byte)(greenMax - greenMin), (byte)(blueMax - blueMin));
         //}
 
-        //[Benchmark]
+        [Benchmark]
         public ColorSwatch[] Old128()
         {
             ColorSwatch[] swatches = new ColorSwatch[_colors.Count];

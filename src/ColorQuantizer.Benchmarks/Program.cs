@@ -14,9 +14,9 @@ namespace ColorQuantizer.Benchmarks
     {
         static void Main(string[] args)
         {
-            //BenchmarkRunner.Run<QuantizerBenchmarks>(); 
+            BenchmarkRunner.Run<QuantizerBenchmarks>(); 
 
-            Profile();
+            //Profile();
         }
 
         private static SKBitmap _bitmap;

@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using ColorQuantizer.Optimized3;
+using ColorQuantizer.Optimized4;
+using ColorQuantizer.Optimized5;
 using ColorQuantizer.Opzimized2;
 using Xunit;
 
@@ -29,11 +31,13 @@ namespace ColorQuantizer.Tests
     {
         private readonly InitialColorQuantizer initialQuantizer = new();
         private readonly OptimizedColorQuantizer3 optimizedQuantizer = new();
+        private readonly OptimizedColorQuantizer4 optimizedQuantizer2 = new();
+        private readonly OptimizedColorQuantizer5 optimizedQuantizer3 = new();
         
         private static IEnumerable<string> GetTestImages() => Directory.EnumerateFiles(@"..\..\..\..\sample_data", "*.jpg", SearchOption.AllDirectories);
 
         [Fact]
-        public void Both_impls_same_quantization()
+        public void All_impls_same_quantization()
         {
             foreach (string item in GetTestImages())
             {
@@ -43,13 +47,17 @@ namespace ColorQuantizer.Tests
 
                 SKColor[] a = initialQuantizer.Quantize(colors, 128);
                 SKColor[] b = optimizedQuantizer.Quantize(colors, 128);
+                SKColor[] c = optimizedQuantizer2.Quantize(colors, 128);
+                SKColor[] d = optimizedQuantizer3.Quantize(colors, 128);
 
                 Assert.Equal(a, b);
+                Assert.Equal(a, c);
+                Assert.Equal(a, d);
             }
         }
 
         [Fact]
-        public void Both_impls_same_swatch()
+        public void All_impls_same_swatch()
         {
             foreach (string item in GetTestImages())
             {
@@ -61,6 +69,8 @@ namespace ColorQuantizer.Tests
                 SKColor[] quantized = initialQuantizer.Quantize(colors, 128);
 
                 Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true), optimizedQuantizer.FindAllColorVariations(quantized, true));
+                Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true), optimizedQuantizer2.FindAllColorVariations(quantized, true));
+                Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true), optimizedQuantizer3.FindAllColorVariations(quantized, true));
             }
         }
 

@@ -35,7 +35,7 @@ namespace ColorQuantizer.Benchmarks
             _bitmap = new List<SKBitmap>();
             _colors = new List<SKColor[]>();
 
-            IEnumerable<string> files = Directory.EnumerateFiles(@"..\..\..\..\..\..\..\..\sample_data\tiles", "*.jpg", SearchOption.AllDirectories);
+            IEnumerable<string> files = Directory.EnumerateFiles(@"..\..\..\..\..\..\..\..\sample_data", "*.jpg", SearchOption.AllDirectories);
             //using FileStream stream = File.OpenRead(@"..\..\..\..\..\..\..\..\sample_data\splash\Aatrox_0.jpg");
             foreach (string file in files)
             {

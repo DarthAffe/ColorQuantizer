@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31624.102
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorQuantizer", "ColorQuantizer\ColorQuantizer.csproj", "{27556507-161C-4E51-9324-BEDB6EC78FEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorQuantizer", "ColorQuantizer\ColorQuantizer.csproj", "{27556507-161C-4E51-9324-BEDB6EC78FEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorQuantizer.Tests", "ColorQuantizer.Tests\ColorQuantizer.Tests.csproj", "{6D3DF5AD-7CC9-4534-9D32-FD582EDB51F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorQuantizer.Tests", "ColorQuantizer.Tests\ColorQuantizer.Tests.csproj", "{6D3DF5AD-7CC9-4534-9D32-FD582EDB51F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColorQuantizer.Benchmarks", "ColorQuantizer.Benchmarks\ColorQuantizer.Benchmarks.csproj", "{1FB67919-31DD-4EED-8B7B-0F86834ECC50}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorQuantizer.Benchmarks", "ColorQuantizer.Benchmarks\ColorQuantizer.Benchmarks.csproj", "{1FB67919-31DD-4EED-8B7B-0F86834ECC50}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

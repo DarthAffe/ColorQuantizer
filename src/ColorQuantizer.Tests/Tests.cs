@@ -8,6 +8,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ColorQuantizer.Optimized10;
 using ColorQuantizer.Optimized11;
+using ColorQuantizer.Optimized12;
+using ColorQuantizer.Optimized13;
 using ColorQuantizer.Optimized3;
 using ColorQuantizer.Optimized4;
 using ColorQuantizer.Optimized5;
@@ -57,15 +59,19 @@ namespace ColorQuantizer.Tests
                 using SKBitmap bitmap = SKBitmap.Decode(stream);
                 SKColor[] colors = bitmap.Pixels;
 
-                SKColor[] a = initialQuantizer.Quantize(colors, 128);
+                //SKColor[] a = initialQuantizer.Quantize(colors, 128);
                 //SKColor[] b = optimizedQuantize3.Quantize(colors, 128);
                 //SKColor[] c = optimizedQuantizer4.Quantize(colors, 128);
                 //SKColor[] d = optimizedQuantizer5.Quantize(colors, 128);
                 //SKColor[] e = optimizedQuantizer6.Quantize(colors, 128);
                 //SKColor[] f = optimizedQuantizer7.Quantize(colors, 128);
                 //SKColor[] g = optimizedQuantizer8.Quantize(colors, 128);
-                SKColor[] h = OptimizedColorQuantizer9.Quantize(colors, 128);
-                SKColor[] i = OptimizedColorQuantizer11.Quantize(colors, 128);
+                //SKColor[] h = OptimizedColorQuantizer9.Quantize(colors, 128);
+                //SKColor[] i = OptimizedColorQuantizer11.Quantize(colors, 128);
+                SKColor[] i = OptimizedColorQuantizer12.Quantize(colors, 128);
+                //SKColor[] j = OptimizedColorQuantizer13Pointer.Quantize(colors, 128);
+                SKColor[] k = OptimizedColorQuantizer13AllPointer.Quantize(colors, 128);
+                //SKColor[] l = OptimizedColorQuantizer13Foreach.Quantize(colors, 128);
 
                 //Assert.Equal(a, b);
                 //Assert.Equal(a, c);
@@ -74,7 +80,9 @@ namespace ColorQuantizer.Tests
                 //Assert.Equal(a, f);
                 //Assert.Equal(a, g);
 
-                Assert.Equal(i, h);
+                //Assert.Equal(j, i);
+                //Assert.Equal(l, i);
+                Assert.Equal(k, i);
                 //Assert.Equal(a, h);
             }
         }
@@ -107,8 +115,12 @@ namespace ColorQuantizer.Tests
                 //             OptimizedColorQuantizer9.FindAllColorVariations(quantized, true));
                 //Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true),
                 //             OptimizedColorQuantizer10.FindAllColorVariations(quantized, true));
+                //Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true),
+                //             OptimizedColorQuantizer11.FindAllColorVariations(quantized, true));
                 Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true),
-                             OptimizedColorQuantizer11.FindAllColorVariations(quantized, true));
+                             OptimizedColorQuantizer13Pointer.FindAllColorVariations(quantized, true));
+                Assert.Equal(initialQuantizer.FindAllColorVariations(quantized, true),
+                             OptimizedColorQuantizer13AllPointer.FindAllColorVariations(quantized, true));
             }
         }
 

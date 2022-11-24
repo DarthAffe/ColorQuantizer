@@ -6,13 +6,13 @@ using SkiaSharp;
 
 namespace ColorQuantizer.Optimized13
 {
-    internal readonly struct ColorRangesAllPointer
+    internal readonly struct ColorRangesPointer
     {
         public readonly byte RedRange;
         public readonly byte GreenRange;
         public readonly byte BlueRange;
 
-        public ColorRangesAllPointer(byte redRange, byte greenRange, byte blueRange)
+        public ColorRangesPointer(byte redRange, byte greenRange, byte blueRange)
         {
             this.RedRange = redRange;
             this.GreenRange = greenRange;
@@ -20,7 +20,7 @@ namespace ColorQuantizer.Optimized13
         }
     }
 
-    internal readonly struct ColorCubeAllPointer
+    internal readonly struct ColorCubePointer
     {
         private const int BYTES_PER_COLOR = 4;
         private static readonly int ELEMENTS_PER_VECTOR = Vector<byte>.Count / BYTES_PER_COLOR;
@@ -30,7 +30,7 @@ namespace ColorQuantizer.Optimized13
         private readonly int _length;
         private readonly SortTarget _currentOrder = SortTarget.None;
         
-        public ColorCubeAllPointer(in Span<SKColor> fullColorList, int from, int length, SortTarget preOrdered)
+        public ColorCubePointer(in Span<SKColor> fullColorList, int from, int length, SortTarget preOrdered)
         {
             this._from = from;
             this._length = length;
@@ -38,33 +38,33 @@ namespace ColorQuantizer.Optimized13
             if (length < 2) return;
 
             Span<SKColor> colors = fullColorList.Slice(from, length);
-            ColorRangesAllPointer colorRanges = GetColorRanges(colors);
+            ColorRangesPointer colorRanges = GetColorRanges(colors);
 
             if ((colorRanges.RedRange > colorRanges.GreenRange) && (colorRanges.RedRange > colorRanges.BlueRange))
             {
                 if (preOrdered != SortTarget.Red)
-                    QuantizerSortAllPointer.SortRed(colors);
+                    QuantizerSortPointer.SortRed(colors);
 
                 _currentOrder = SortTarget.Red;
             }
             else if (colorRanges.GreenRange > colorRanges.BlueRange)
             {
                 if (preOrdered != SortTarget.Green)
-                    QuantizerSortAllPointer.SortGreen(colors);
+                    QuantizerSortPointer.SortGreen(colors);
 
                 _currentOrder = SortTarget.Green;
             }
             else
             {
                 if (preOrdered != SortTarget.Blue)
-                    QuantizerSortAllPointer.SortBlue(colors);
+                    QuantizerSortPointer.SortBlue(colors);
 
                 _currentOrder = SortTarget.Blue;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ColorRangesAllPointer GetColorRanges(in ReadOnlySpan<SKColor> colors)
+        private ColorRangesPointer GetColorRanges(in ReadOnlySpan<SKColor> colors)
         {
             if (Vector.IsHardwareAccelerated && (colors.Length >= Vector<byte>.Count))
             {
@@ -109,7 +109,7 @@ namespace ColorQuantizer.Optimized13
                     if (color.Blue > blueMax) blueMax = color.Blue;
                 }
 
-                return new ColorRangesAllPointer((byte)(redMax - redMin), (byte)(greenMax - greenMin), (byte)(blueMax - blueMin));
+                return new ColorRangesPointer((byte)(redMax - redMin), (byte)(greenMax - greenMin), (byte)(blueMax - blueMin));
             }
             else
             {
@@ -130,19 +130,19 @@ namespace ColorQuantizer.Optimized13
                     if (color.Blue > blueMax) blueMax = color.Blue;
                 }
 
-                return new ColorRangesAllPointer((byte)(redMax - redMin), (byte)(greenMax - greenMin), (byte)(blueMax - blueMin));
+                return new ColorRangesPointer((byte)(redMax - redMin), (byte)(greenMax - greenMin), (byte)(blueMax - blueMin));
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void Split(in Span<SKColor> fullColorList, out ColorCubeAllPointer a, out ColorCubeAllPointer b)
+        internal void Split(in Span<SKColor> fullColorList, out ColorCubePointer a, out ColorCubePointer b)
         {
             Span<SKColor> colors = fullColorList.Slice(_from, _length);
 
             int median = colors.Length / 2;
 
-            a = new ColorCubeAllPointer(fullColorList, _from, median, _currentOrder);
-            b = new ColorCubeAllPointer(fullColorList, _from + median, colors.Length - median, _currentOrder);
+            a = new ColorCubePointer(fullColorList, _from, median, _currentOrder);
+            b = new ColorCubePointer(fullColorList, _from + median, colors.Length - median, _currentOrder);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,6 +3,7 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Running;
+using ColorQuantizer.Optimized11;
 using ColorQuantizer.Optimized3;
 using ColorQuantizer.Optimized4;
 using ColorQuantizer.Optimized8;
@@ -15,14 +16,14 @@ namespace ColorQuantizer.Benchmarks
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<QuantizerBenchmarks>(); 
+            //BenchmarkRunner.Run<ByteAccessBenchmarks>(); 
+            BenchmarkRunner.Run<QuantizerBenchmarks>();
 
             //Profile();
         }
 
         private static SKBitmap _bitmap;
         private static SKColor[] _colors;
-        private static OptimizedColorQuantizer8 _optimizedColorQuantizer2;
 
         private static void Profile()
         {
@@ -38,8 +39,6 @@ namespace ColorQuantizer.Benchmarks
 
         private static void InitializeProfile()
         {
-            _optimizedColorQuantizer2 = new OptimizedColorQuantizer8();
-
             using FileStream stream = File.OpenRead(@"..\..\..\..\sample_data\splash\Aatrox_0.jpg");
             _bitmap = SKBitmap.Decode(stream);
             _colors = _bitmap.Pixels;
@@ -47,8 +46,8 @@ namespace ColorQuantizer.Benchmarks
 
         private static ColorSwatch ProfileRun()
         {
-            SKColor[] skClrs = _optimizedColorQuantizer2.Quantize(_colors, 128);
-            return _optimizedColorQuantizer2.FindAllColorVariations(skClrs, true);
+            SKColor[] skClrs = OptimizedColorQuantizer11.Quantize(_colors, 128);
+            return OptimizedColorQuantizer11.FindAllColorVariations(skClrs, true);
         }
     }
 }

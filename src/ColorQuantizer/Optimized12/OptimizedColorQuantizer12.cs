@@ -1,39 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using SkiaSharp;
 
-namespace ColorQuantizer.Optimized9
+namespace ColorQuantizer.Optimized12
 {
-    public class OptimizedColorQuantizer9
+    public static class OptimizedColorQuantizer12
     {
-        public SKColor[] Quantize(in Span<SKColor> colors, int amount)
+        /// <summary>
+        /// Quantizes a span of colors into the desired amount of representative colors.
+        /// </summary>
+        /// <param name="colors">The colors to quantize</param>
+        /// <param name="amount">How many colors to return. Must be a power of two.</param>
+        /// <returns><paramref name="amount"/> colors.</returns>
+        public static SKColor[] Quantize(in Span<SKColor> colors, int amount)
         {
-            if ((amount & (amount - 1)) != 0)
+            if (!BitOperations.IsPow2(amount))
                 throw new ArgumentException("Must be power of two", nameof(amount));
 
-            Queue<ColorCube> cubes = new(amount);
-            cubes.Enqueue(new ColorCube(colors, 0, colors.Length, SortTarget.None));
+            int splits = BitOperations.Log2((uint)amount);
+            return QuantizeSplit(colors, splits);
+        }
 
-            while (cubes.Count < amount)
+        /// <summary>
+        /// Quantizes a span of colors, splitting the average <paramref name="splits"/> number of times.
+        /// </summary>
+        /// <param name="colors">The colors to quantize</param>
+        /// <param name="splits">How many splits to execute. Each split doubles the number of colors returned.</param>
+        /// <returns>Up to (2 ^ <paramref name="splits"/>) number of colors.</returns>
+        public static SKColor[] QuantizeSplit(in Span<SKColor> colors, int splits)
+        {
+            if (colors.Length < (1 << splits)) throw new ArgumentException($"The color array must at least contain ({(1 << splits)}) to perform {splits} splits.");
+
+            Span<ColorCube> cubes = new ColorCube[1 << splits];
+            cubes[0] = new ColorCube(colors, 0, colors.Length, SortTarget.None);
+
+            int currentIndex = 0;
+            for (int i = 0; i < splits; i++)
             {
-                ColorCube cube = cubes.Dequeue();
-
-                if (cube.TrySplit(colors, out ColorCube? a, out ColorCube? b))
+                int currentCubeCount = 1 << i;
+                Span<ColorCube> currentCubes = cubes.Slice(0, currentCubeCount);
+                for (int j = 0; j < currentCubes.Length; j++)
                 {
-                    cubes.Enqueue(a);
-                    cubes.Enqueue(b);
+                    currentCubes[j].Split(colors, out ColorCube a, out ColorCube b);
+                    currentCubes[j] = a;
+                    cubes[++currentIndex] = b;
                 }
             }
 
-            SKColor[] result = new SKColor[cubes.Count];
-            int i = 0;
-            foreach (ColorCube colorCube in cubes)
-                result[i++] = colorCube.GetAverageColor(colors);
+            SKColor[] result = new SKColor[cubes.Length];
+            for (int i = 0; i < cubes.Length; i++)
+                result[i] = cubes[i].GetAverageColor(colors);
 
             return result;
         }
 
-        public ColorSwatch FindAllColorVariations(IEnumerable<SKColor> colors, bool ignoreLimits = false)
+        /// <summary>
+        ///     Finds colors with certain characteristics in a given <see cref="IEnumerable{SKColor}" />.
+        ///     <para />
+        ///     Vibrant variants are more saturated, while Muted colors are less.
+        ///     <para />
+        ///     Light and Dark colors have higher and lower lightness values, respectively.
+        /// </summary>
+        /// <param name="colors">The colors to find the variations in</param>
+        /// <param name="type">Which type of color to find</param>
+        /// <param name="ignoreLimits">
+        ///     Ignore hard limits on whether a color is considered for each category. Result may be
+        ///     <see cref="SKColor.Empty" /> if this is false
+        /// </param>
+        /// <returns>The color found</returns>
+        public static SKColor FindColorVariation(IEnumerable<SKColor> colors, ColorType type, bool ignoreLimits = false)
+        {
+            float bestColorScore = 0;
+            SKColor bestColor = SKColor.Empty;
+
+            foreach (SKColor clr in colors)
+            {
+                float score = GetScore(clr, type, ignoreLimits);
+                if (score > bestColorScore)
+                {
+                    bestColorScore = score;
+                    bestColor = clr;
+                }
+            }
+
+            return bestColor;
+        }
+
+        /// <summary>
+        ///     Finds all the color variations available and returns a struct containing them all.
+        /// </summary>
+        /// <param name="colors">The colors to find the variations in</param>
+        /// <param name="ignoreLimits">
+        ///     Ignore hard limits on whether a color is considered for each category. Some colors may be
+        ///     <see cref="SKColor.Empty" /> if this is false
+        /// </param>
+        /// <returns>A swatch containing all color variations</returns>
+        public static ColorSwatch FindAllColorVariations(IEnumerable<SKColor> colors, bool ignoreLimits = false)
         {
             SKColor bestVibrantColor = SKColor.Empty;
             SKColor bestLightVibrantColor = SKColor.Empty;

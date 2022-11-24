@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using SkiaSharp;
 
-namespace ColorQuantizer.Optimized9
+namespace ColorQuantizer.Optimized10
 {
     internal readonly struct ColorRanges
     {

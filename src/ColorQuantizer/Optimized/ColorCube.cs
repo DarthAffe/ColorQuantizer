@@ -31,14 +31,7 @@ namespace ColorQuantizer.Optimized
             int redRange = maxRed - minRed;
             int greenRange = maxGreen - minGreen;
             int blueRange = maxBlue - minBlue;
-
-            //if (redRange > greenRange && redRange > blueRange)
-            //    _colors = arr.OrderBy(a => a.Red).ToArray();
-            //else if (greenRange > blueRange)
-            //    _colors = arr.OrderBy(a => a.Green).ToArray();
-            //else
-            //    _colors = arr.OrderBy(a => a.Blue).ToArray();
-
+            
             if (redRange > greenRange && redRange > blueRange)
                 span.Sort((a, b) => a.Red.CompareTo(b.Red));
             else if (greenRange > blueRange)
